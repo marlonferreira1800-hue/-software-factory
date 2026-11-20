@@ -1,5 +1,18 @@
-const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-export const API_BASE_URL = RAW_API_BASE.replace(/\/$/, '') + '/api';
+function resolveApiBaseUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (configured) {
+    return configured.replace(/\/$/, '') + '/api';
+  }
+  if (
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ) {
+    return 'http://localhost:3001/api';
+  }
+  return '/backend';
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 export class ApiClientError extends Error {
   statusCode: number;

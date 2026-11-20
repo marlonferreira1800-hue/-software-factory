@@ -1,0 +1,64 @@
+name: Fábrica Livre CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: fabrica
+          POSTGRES_PASSWORD: fabrica_dev_password
+          POSTGRES_DB: fabrica_livre
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://fabrica:fabrica_dev_password@localhost:5432/fabrica_livre?schema=public
+      JWT_SECRET: ci-test-jwt-secret-key-2026
+      ENCRYPTION_SECRET: ci-test-aes-secret-key-2026
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
+
+      - name: Build monorepo (shared + api + web)
+        run: npm run build
+
+      - name: Run database migrations and seed
+        run: |
+          npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma
+          npx tsx apps/api/prisma/seed.ts
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Run API E2E tests against PostgreSQL
+        run: npm run test:e2e --workspace=apps/api
+
+      - name: Run typecheck and ESLint
+        run: npm run lint

@@ -23,7 +23,17 @@ Projeto open-source sob licença **MIT**, construído para democratizar a criaç
 
 ---
 
-## Como Rodar com Docker (Mais Fácil)
+## Publicar Online na Nuvem (Deploy Full-Stack)
+
+Como o projeto possui **Frontend + Backend NestJS + PostgreSQL**, você pode publicar tudo online gratuitamente em poucos minutos (veja o guia completo em [DEPLOY.md](./DEPLOY.md)):
+
+- **1-Click Deploy no Render (Banco + API + Site):**  
+  https://render.com/deploy?repo=https://github.com/marlonferreira1800-hue/-software-factory
+- **Vercel + Railway:** Configurações prontas em [`apps/web/vercel.json`](./apps/web/vercel.json), [`apps/api/railway.toml`](./apps/api/railway.toml) e [`apps/web/railway.toml`](./apps/web/railway.toml).
+
+---
+
+## Como Rodar com Docker (Mais Fácil Localmente)
 
 ```bash
 cp .env.example .env

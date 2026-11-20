@@ -1,0 +1,43 @@
+databases:
+  - name: fabrica-livre-db
+    databaseName: fabrica_livre
+    user: fabrica
+    plan: free
+
+services:
+  - type: web
+    name: fabrica-livre-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build:shared && npx prisma generate --schema=apps/api/prisma/schema.prisma && npm run build:api
+    startCommand: npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma && npx tsx apps/api/prisma/seed.ts && node apps/api/dist/main.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fabrica-livre-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ENCRYPTION_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: "*"
+
+  - type: web
+    name: fabrica-livre-web
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build:shared && npm run build:web
+    startCommand: npm run start --workspace=apps/web
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_URL
+        fromService:
+          type: web
+          name: fabrica-livre-api
+          property: host

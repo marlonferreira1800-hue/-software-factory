@@ -10,10 +10,17 @@ async function bootstrap(): Promise<void> {
 
   const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
     .split(',')
-    .map((o) => o.trim());
+    .map((o) => o.trim())
+    .filter(Boolean)
+    .flatMap((o) => {
+      if (o === '*' || o.startsWith('http://') || o.startsWith('https://')) {
+        return [o];
+      }
+      return [`https://${o}`, `http://${o}`];
+    });
 
   app.enableCors({
-    origin: corsOrigins,
+    origin: corsOrigins.includes('*') ? true : corsOrigins,
     credentials: true,
   });
 
