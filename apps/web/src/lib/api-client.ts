@@ -1,3 +1,23 @@
+import {
+  browserFactoryDownloadZip,
+  browserFactoryRequest,
+} from './browser-factory';
+
+export function isBrowserOnlyMode(): boolean {
+  if (process.env.NEXT_PUBLIC_STATIC_DEMO === 'true') {
+    return true;
+  }
+  if (
+    !process.env.NEXT_PUBLIC_API_URL?.trim() &&
+    typeof window !== 'undefined' &&
+    (window.location.hostname.endsWith('.github.io') ||
+      window.location.hostname.endsWith('.vercel.app'))
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function resolveApiBaseUrl(): string {
   const configured = process.env.NEXT_PUBLIC_API_URL?.trim();
   if (configured) {
@@ -28,6 +48,7 @@ export class ApiClientError extends Error {
 
 export function getStoredToken(): string | null {
   if (typeof window === 'undefined') return null;
+  if (isBrowserOnlyMode()) return 'browser-demo-jwt';
   return window.localStorage.getItem('fabrica_livre_token');
 }
 
@@ -44,6 +65,17 @@ export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+  if (isBrowserOnlyMode()) {
+    try {
+      return await browserFactoryRequest<T>(path, options);
+    } catch (err) {
+      throw new ApiClientError(
+        err instanceof Error ? err.message : 'Erro no modo navegador.',
+        400,
+      );
+    }
+  }
+
   const token = getStoredToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -81,6 +113,11 @@ export async function apiRequest<T>(
 }
 
 export async function apiDownloadBlob(path: string, fallbackFilename: string): Promise<void> {
+  if (isBrowserOnlyMode()) {
+    await browserFactoryDownloadZip(path, fallbackFilename);
+    return;
+  }
+
   const token = getStoredToken();
   const res = await fetch(`${API_BASE_URL}${path}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},

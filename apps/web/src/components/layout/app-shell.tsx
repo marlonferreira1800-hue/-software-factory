@@ -15,6 +15,7 @@ import {
   Sparkles,
   X,
 } from 'lucide-react';
+import { isBrowserOnlyMode } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui/badge';
@@ -112,6 +113,11 @@ export function AppShell({
           </div>
 
           <div className="flex items-center gap-3">
+            {isBrowserOnlyMode() && (
+              <Badge variant="outline" className="hidden lg:inline-flex">
+                Modo Navegador
+              </Badge>
+            )}
             {user ? (
               <>
                 <div className="hidden sm:flex items-center gap-2.5 rounded-lg border border-border bg-muted/60 px-3 py-1.5">

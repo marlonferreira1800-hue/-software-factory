@@ -2,7 +2,11 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { LoginDto, RegisterDto, UserResponse, UserRole } from '@software-factory/shared';
-import { getStoredToken, setStoredToken } from './api-client';
+import {
+  getStoredToken,
+  isBrowserOnlyMode,
+  setStoredToken,
+} from './api-client';
 import { authService } from '@/services/auth.service';
 
 interface AuthContextValue {
@@ -23,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     const token = getStoredToken();
-    if (!token) {
+    if (!token && !isBrowserOnlyMode()) {
       setUser(null);
       setLoading(false);
       return;

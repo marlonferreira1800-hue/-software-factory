@@ -108,7 +108,7 @@ export default function TemplatesPage() {
         templateId: tpl.id,
       });
       toast.success('Projeto criado a partir do modelo!');
-      router.push(`/projects/${project.id}`);
+      router.push(`/studio?id=${project.id}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Não foi possível clonar o modelo.');
     } finally {

@@ -236,7 +236,7 @@ export default function ProjectsPage() {
                     <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
                       <div className="flex items-center gap-2">
                         <Button size="sm" asChild>
-                          <Link href={`/projects/${proj.id}`}>
+                          <Link href={`/studio?id=${proj.id}`}>
                             <ExternalLink className="h-3.5 w-3.5" />
                             Abrir Studio
                           </Link>

@@ -1,47 +1,29 @@
-# Guia de Publicação Online (Deploy Full-Stack)
+# Guia de Publicação Online (GitHub Pages, Vercel, Render e Railway)
 
-O **GitHub** guarda todo o seu código e executa testes automáticos via **GitHub Actions** ([`.github/workflows/ci.yml`](./.github/workflows/ci.yml)), mas não executa servidores NestJS nem bancos PostgreSQL diretamente.
+## 1. GitHub Pages (Já Ativo e Automático!)
 
-Por isso, o repositório já vem preparado para você publicar o site completo na nuvem (Frontend + Backend + PostgreSQL real) em poucos minutos.
+O repositório já publica automaticamente a interface completa rodando 100% no navegador (Assistente, Modelos Prontos, Simulador Interativo, Ponte para Antigravity/ChatGPT/Claude/Gemini e Download `.ZIP`) pelo workflow [`.github/workflows/pages.yml`](./.github/workflows/pages.yml):
+
+- **Link ao vivo:** https://marlonferreira1800-hue.github.io/-software-factory/
 
 ---
 
-## Opção 1 (Mais Fácil — 1 Clique): Render Blueprint
+## 2. Vercel (1 Clique — Frontend)
+
+Clique no link abaixo para publicar na **Vercel** com a pasta `apps/web` já pré-configurada via [`apps/web/vercel.json`](./apps/web/vercel.json):
+
+https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmarlonferreira1800-hue%2F-software-factory&root-directory=apps%2Fweb&project-name=fabrica-livre
+
+> Se você já subiu o Backend no Render, pode adicionar na Vercel a variável `NEXT_PUBLIC_API_URL=https://fabrica-livre-api.onrender.com`. Se não adicionar nenhuma variável, o site na Vercel também funciona automaticamente no Modo Navegador!
+
+---
+
+## 3. Render Blueprint (1 Clique — PostgreSQL + Backend NestJS + Frontend)
 
 O arquivo [`render.yaml`](./render.yaml) cria automaticamente:
-1. Banco de dados **PostgreSQL gerenciado** (`fabrica-livre-db`)
-2. Servidor **Backend NestJS** com migrations + seed automáticos (`fabrica-livre-api`)
-3. Site **Frontend Next.js** já conectado ao backend via proxy `/backend` (`fabrica-livre-web`)
+1. Banco **PostgreSQL** (`fabrica-livre-db`)
+2. Backend **NestJS** (`fabrica-livre-api`)
+3. Frontend **Next.js** (`fabrica-livre-web`)
 
-### Passo a passo:
-1. Crie uma conta gratuita em https://render.com conectada ao seu GitHub.
-2. Clique neste link direto ou vá em **New → Blueprint**:
-   https://render.com/deploy?repo=https://github.com/marlonferreira1800-hue/-software-factory
-3. Dê um nome (ex: `fabrica-livre`) e clique em **Apply**.
-4. Aguarde alguns minutos até os 3 serviços ficarem verdes e abra a URL gerada para `fabrica-livre-web`!
-
----
-
-## Opção 2: Vercel (Frontend) + Render/Railway (Backend + PostgreSQL)
-
-### Passo A — Subir o Banco + Backend no Render ou Railway
-- No **Render**, use o [`render.yaml`](./render.yaml) (ou suba apenas `fabrica-livre-api` + `fabrica-livre-db`).
-- No **Railway**:
-  1. Crie um projeto novo e adicione um banco **PostgreSQL**.
-  2. Adicione o serviço **API** apontando para este repositório usando [`apps/api/railway.toml`](./apps/api/railway.toml) e preencha `DATABASE_URL`, `JWT_SECRET` e `ENCRYPTION_SECRET`.
-
-### Passo B — Subir o Frontend na Vercel
-1. Acesse https://vercel.com/new e importe `marlonferreira1800-hue/-software-factory`.
-2. Em **Root Directory**, selecione `apps/web` (o arquivo [`apps/web/vercel.json`](./apps/web/vercel.json) já configura o build do monorepo).
-3. Adicione a variável de ambiente:
-   - `NEXT_PUBLIC_API_URL` = URL pública do seu backend (ex: `https://fabrica-livre-api.onrender.com`)
-4. Clique em **Deploy**.
-
----
-
-## Contas Iniciais para Testar no Site Online
-
-Assim que o site subir, o `seed.ts` já cria estas contas prontas (você pode clicar nos botões de preenchimento rápido na tela de Login):
-- **Criador (`BUILDER`):** `criador@fabricalivre.org` / `Criador@123`
-- **Administrador (`ADMIN`):** `admin@fabricalivre.org` / `Admin@123`
-- **Consulta (`VIEWER`):** `visitante@fabricalivre.org` / `Visitante@123`
+Link direto:
+https://render.com/deploy?repo=https://github.com/marlonferreira1800-hue/-software-factory

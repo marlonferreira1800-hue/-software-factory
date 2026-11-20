@@ -163,7 +163,7 @@ export default function WizardPage() {
         includeAiPack: true,
       });
       toast.success('Software completo gerado! Abrindo simulador e downloads...');
-      router.push(`/projects/${project.id}`);
+      router.push(`/studio?id=${project.id}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erro ao compilar o código.');
     } finally {

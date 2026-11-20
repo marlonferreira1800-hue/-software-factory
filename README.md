@@ -23,13 +23,15 @@ Projeto open-source sob licença **MIT**, construído para democratizar a criaç
 
 ---
 
-## Publicar Online na Nuvem (Deploy Full-Stack)
+## Acessar Agora / Publicar na Nuvem
 
-Como o projeto possui **Frontend + Backend NestJS + PostgreSQL**, você pode publicar tudo online gratuitamente em poucos minutos (veja o guia completo em [DEPLOY.md](./DEPLOY.md)):
-
-- **1-Click Deploy no Render (Banco + API + Site):**  
+- **Site Online Direto no GitHub Pages (Instantâneo no Navegador):**  
+  https://marlonferreira1800-hue.github.io/-software-factory/
+- **Deploy em 1 Clique na Vercel (Frontend):**  
+  https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmarlonferreira1800-hue%2F-software-factory&root-directory=apps%2Fweb&project-name=fabrica-livre
+- **Deploy em 1 Clique no Render (Banco PostgreSQL + API NestJS + Frontend):**  
   https://render.com/deploy?repo=https://github.com/marlonferreira1800-hue/-software-factory
-- **Vercel + Railway:** Configurações prontas em [`apps/web/vercel.json`](./apps/web/vercel.json), [`apps/api/railway.toml`](./apps/api/railway.toml) e [`apps/web/railway.toml`](./apps/web/railway.toml).
+- **Guia completo de deploy (Vercel / Railway / Render):** [DEPLOY.md](./DEPLOY.md)
 
 ---
 
