@@ -311,17 +311,17 @@ export default function AiConnectorsPage() {
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-2xl font-bold tracking-tight">
-              Minhas IAs & Assinaturas
+            <h1 className="font-display text-3xl font-semibold tracking-tight">
+              Integrações & Assinaturas
             </h1>
-            <p className="text-sm text-muted-foreground">
-              Conecte Antigravity, ChatGPT, Claude, Gemini, Ollama local ou use o Motor Automático gratuito.
+            <p className="text-sm text-muted-foreground mt-1">
+              Opcional: conecte Antigravity, ChatGPT, Claude, Gemini ou Ollama para refinar projetos maiores.
             </p>
           </div>
           {canWrite && (
-            <Button onClick={openNewModal}>
+            <Button variant="accent" onClick={openNewModal}>
               <Plus className="h-4 w-4" />
-              Adicionar Conector de IA
+              Nova Integração
             </Button>
           )}
         </div>

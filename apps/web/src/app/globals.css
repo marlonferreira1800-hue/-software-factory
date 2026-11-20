@@ -1,24 +1,24 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #FAF8F5;
-  --color-foreground: #1C1917;
+  --color-background: #FAF9F6;
+  --color-foreground: #171614;
   --color-card: #FFFFFF;
-  --color-card-foreground: #1C1917;
-  --color-primary: #1B4332;
-  --color-primary-foreground: #FFFFFF;
-  --color-secondary: #EFECE6;
-  --color-secondary-foreground: #292524;
-  --color-muted: #F4F1EA;
-  --color-muted-foreground: #57534E;
-  --color-accent: #B45309;
+  --color-card-foreground: #171614;
+  --color-primary: #171614;
+  --color-primary-foreground: #FAF9F6;
+  --color-secondary: #F2EFE9;
+  --color-secondary-foreground: #2A2824;
+  --color-muted: #F5F3EE;
+  --color-muted-foreground: #68645E;
+  --color-accent: #B93815;
   --color-accent-foreground: #FFFFFF;
   --color-destructive: #B91C1C;
-  --color-border: #E5DFD5;
+  --color-border: #E5E1D8;
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, monospace;
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), Georgia, serif;
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
 body {

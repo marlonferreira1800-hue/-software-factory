@@ -186,8 +186,8 @@ export function ProjectStudioView({ projectId }: { projectId: string }) {
             Voltar para Meus Projetos
           </Link>
           <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="font-display text-2xl font-bold tracking-tight">{project.name}</h1>
-            <Badge variant="default">{project.status}</Badge>
+            <h1 className="font-display text-2xl font-semibold tracking-tight">{project.name}</h1>
+            <Badge variant="outline">{project.status}</Badge>
           </div>
           <p className="text-sm text-muted-foreground max-w-2xl">{project.plainIdea}</p>
         </div>
@@ -196,12 +196,12 @@ export function ProjectStudioView({ projectId }: { projectId: string }) {
           {canWrite && (
             <Button variant="outline" onClick={handleGenerateCode} disabled={busyAction}>
               <RefreshCw className={`h-4 w-4 ${busyAction ? 'animate-spin' : ''}`} />
-              {project.generatedFilesCount > 0 ? 'Regerar Código' : 'Gerar Código Completo'}
+              {project.generatedFilesCount > 0 ? 'Atualizar Código' : 'Compilar Código'}
             </Button>
           )}
-          <Button onClick={handleDownloadZip} disabled={busyAction}>
+          <Button variant="accent" onClick={handleDownloadZip} disabled={busyAction}>
             <Download className="h-4 w-4" />
-            Baixar Projeto (.ZIP)
+            Baixar Sistema (.ZIP)
           </Button>
         </div>
       </div>
@@ -209,16 +209,16 @@ export function ProjectStudioView({ projectId }: { projectId: string }) {
       {!project.blueprintJson ? (
         <Card className="p-8 text-center">
           <CardHeader>
-            <CardTitle>Este projeto ainda não possui telas modeladas</CardTitle>
+            <CardTitle>Este sistema ainda não possui telas montadas</CardTitle>
             <CardDescription>
-              Clique abaixo para modelar automaticamente com o Motor Offline, ou use sua assinatura Antigravity / ChatGPT / Claude / Gemini.
+              Clique abaixo para montar as telas e campos automaticamente a partir da sua descrição.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center gap-3">
             {canWrite && (
-              <Button onClick={handleGenerateBlueprintNow} disabled={busyAction}>
+              <Button variant="accent" onClick={handleGenerateBlueprintNow} disabled={busyAction}>
                 <Sparkles className="h-4 w-4" />
-                {busyAction ? 'Modelando...' : 'Modelar Sistema Automaticamente'}
+                {busyAction ? 'Montando...' : 'Montar Telas Automaticamente'}
               </Button>
             )}
           </CardContent>
@@ -228,22 +228,22 @@ export function ProjectStudioView({ projectId }: { projectId: string }) {
           <TabsList>
             <TabsTrigger value="preview">
               <Play className="h-4 w-4" />
-              Simulador ao Vivo
+              Testar Sistema
             </TabsTrigger>
             <TabsTrigger value="editor">
               <Layers className="h-4 w-4" />
-              Telas & Campos
+              Editar Telas
+            </TabsTrigger>
+            <TabsTrigger value="code">
+              <Code2 className="h-4 w-4" />
+              Código & Download ({bundle?.artifacts.length || 0})
             </TabsTrigger>
             {canWrite && (
               <TabsTrigger value="ai-bridge">
                 <Bot className="h-4 w-4" />
-                Usar Minha IA (Assinatura)
+                Refinar com Assinatura
               </TabsTrigger>
             )}
-            <TabsTrigger value="code">
-              <Code2 className="h-4 w-4" />
-              Código Gerado ({bundle?.artifacts.length || 0})
-            </TabsTrigger>
             <TabsTrigger value="history">
               <History className="h-4 w-4" />
               Histórico ({bundle?.jobs.length || 0})

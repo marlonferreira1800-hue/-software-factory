@@ -1,73 +1,107 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  ArrowLeft,
   ArrowRight,
-  Bot,
-  CheckCircle2,
-  Code2,
-  Sparkles,
-  Wand2,
+  Briefcase,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  HeartPulse,
+  Loader2,
+  Scissors,
+  ShoppingBag,
+  UtensilsCrossed,
+  Wallet,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AiProviderResponse,
-  AppBlueprint,
   AppTemplateResponse,
   CreateProjectSchema,
-  SoftwareProjectResponse,
 } from '@software-factory/shared';
 import { aiProvidersService } from '@/services/ai-providers.service';
 import { generatorService } from '@/services/generator.service';
 import { projectsService } from '@/services/projects.service';
 import { templatesService } from '@/services/templates.service';
 import { AppShell } from '@/components/layout/app-shell';
-import { BlueprintVisualEditor } from '@/components/projects/blueprint-visual-editor';
-import { SubscriptionBridgePanel } from '@/components/projects/subscription-bridge-panel';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input, Label, Textarea } from '@/components/ui/input';
 
-const EXAMPLE_IDEAS = [
+const BUSINESS_STARTERS = [
   {
-    name: 'Barbearia & Agenda do Bairro',
+    id: 'barbearia',
+    title: 'Barbearia & Salão',
+    modules: 'Clientes · Serviços · Horários',
+    icon: Scissors,
+    name: 'Agenda da Barbearia',
     idea: 'Quero cadastrar clientes, serviços com preço e controlar os agendamentos da minha barbearia.',
     audience: 'Barbeiros e recepção',
   },
   {
-    name: 'Loja de Roupas & Estoque',
+    id: 'loja',
+    title: 'Loja & Estoque',
+    modules: 'Produtos · Estoque · Vendas',
+    icon: ShoppingBag,
+    name: 'Controle da Minha Loja',
     idea: 'Preciso controlar produtos em estoque, fornecedores e registrar pedidos de vendas.',
     audience: 'Lojistas e vendedores',
   },
   {
-    name: 'Clínica de Atendimento',
+    id: 'clinica',
+    title: 'Clínica & Consultório',
+    modules: 'Pacientes · Consultas · Agenda',
+    icon: HeartPulse,
+    name: 'Gestão da Clínica',
     idea: 'Quero organizar fichas de pacientes, profissionais e consultas marcadas da semana.',
     audience: 'Consultórios e clínicas',
   },
   {
-    name: 'Caixa do Autônomo',
+    id: 'financeiro',
+    title: 'Caixa & Finanças',
+    modules: 'Entradas · Contas · Categorias',
+    icon: Wallet,
+    name: 'Caixa do Negócio',
     idea: 'Preciso registrar receitas, despesas, categorias e contas pagas ou a vencer.',
-    audience: 'MEIs e prestadores de serviço',
+    audience: 'Autônomos e MEIs',
+  },
+  {
+    id: 'servicos',
+    title: 'Oficina & Serviços',
+    modules: 'Clientes · Veículos · Ordens',
+    icon: Briefcase,
+    name: 'Controle de Atendimentos',
+    idea: 'Quero cadastrar clientes, veículos atendidos, tarefas e lançamentos financeiros.',
+    audience: 'Oficinas e prestadores',
+  },
+  {
+    id: 'delivery',
+    title: 'Pedidos & Delivery',
+    modules: 'Clientes · Produtos · Entregas',
+    icon: UtensilsCrossed,
+    name: 'Pedidos & Entregas',
+    idea: 'Quero cadastrar produtos, clientes e acompanhar o status dos pedidos de entrega.',
+    audience: 'Restaurantes e confeitarias',
   },
 ];
 
-export default function WizardPage() {
+function NewSystemFormContent() {
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const searchParams = useSearchParams();
+  const initialIdea = searchParams.get('idea') || '';
+
+  const [selectedStarterId, setSelectedStarterId] = useState<string>('');
   const [name, setName] = useState('');
-  const [plainIdea, setPlainIdea] = useState('');
+  const [plainIdea, setPlainIdea] = useState(initialIdea);
   const [targetAudience, setTargetAudience] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [selectedProviderId, setSelectedProviderId] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [templates, setTemplates] = useState<AppTemplateResponse[]>([]);
   const [providers, setProviders] = useState<AiProviderResponse[]>([]);
-  const [project, setProject] = useState<SoftwareProjectResponse | null>(null);
-  const [blueprint, setBlueprint] = useState<AppBlueprint | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -77,333 +111,259 @@ export default function WizardPage() {
       .then(([tplRes, provRes]) => {
         setTemplates(tplRes.data);
         setProviders(provRes.data);
-        const def = provRes.data.find((p) => p.isDefault) || provRes.data[0];
-        if (def) setSelectedProviderId(def.id);
+        const offlineOrDefault =
+          provRes.data.find((p) => p.authMode === 'NONE') ||
+          provRes.data.find((p) => p.isDefault);
+        if (offlineOrDefault) setSelectedProviderId(offlineOrDefault.id);
       })
-      .catch(() => {
-        toast.error('Erro ao carregar modelos e conectores.');
-      });
+      .catch(() => {});
   }, []);
 
-  const selectedProvider = providers.find((p) => p.id === selectedProviderId) || null;
+  function pickStarter(starter: (typeof BUSINESS_STARTERS)[number]) {
+    setSelectedStarterId(starter.id);
+    setName(starter.name);
+    setPlainIdea(starter.idea);
+    setTargetAudience(starter.audience);
+    setSelectedTemplateId('');
+  }
 
-  async function handleStep1Next() {
+  async function buildAndOpen(customArgs?: {
+    appName: string;
+    idea: string;
+    audience?: string;
+    templateId?: string;
+  }) {
+    const finalIdea = (customArgs?.idea ?? plainIdea).trim();
+    const inferredName =
+      (customArgs?.appName ?? name).trim() ||
+      (finalIdea.length >= 6 ? `Sistema ${finalIdea.split(/\s+/).slice(0, 3).join(' ')}` : '');
+
     const parsed = CreateProjectSchema.safeParse({
-      name,
-      plainIdea,
-      targetAudience: targetAudience || undefined,
-      templateId: selectedTemplateId || undefined,
+      name: inferredName,
+      plainIdea: finalIdea,
+      targetAudience: (customArgs?.audience ?? targetAudience) || undefined,
+      templateId: (customArgs?.templateId ?? selectedTemplateId) || undefined,
       aiProviderId: selectedProviderId || undefined,
     });
 
     if (!parsed.success) {
-      toast.error(parsed.error.errors[0]?.message || 'Preencha nome e descrição da ideia.');
+      toast.error(parsed.error.errors[0]?.message || 'Descreva o que você precisa controlar.');
       return;
     }
 
-    setBusy(true);
+    setCreating(true);
     try {
       const created = await projectsService.create(parsed.data);
-      setProject(created);
 
-      if (created.blueprintJson) {
-        setBlueprint(created.blueprintJson);
-        setStep(3);
-        toast.success('Modelo pronto carregado! Revise as telas abaixo.');
-      } else {
-        setStep(2);
+      const selectedProv = providers.find((p) => p.id === selectedProviderId);
+      if (!created.blueprintJson) {
+        await generatorService.generateBlueprint(created.id, {
+          prompt: finalIdea,
+          providerId:
+            selectedProv && selectedProv.authMode !== 'BROWSER_HANDOFF'
+              ? selectedProv.id
+              : undefined,
+        });
       }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Erro ao criar projeto.');
-    } finally {
-      setBusy(false);
-    }
-  }
 
-  async function handleRunSelectedEngine() {
-    if (!project) return;
-    setBusy(true);
-    try {
-      const res = await generatorService.generateBlueprint(project.id, {
-        prompt: plainIdea,
-        providerId: selectedProviderId || undefined,
-      });
-      setProject(res.project);
-      setBlueprint(res.blueprint);
-      setStep(3);
-      toast.success('Estrutura do seu sistema desenhada com sucesso!');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Falha ao gerar estrutura.');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleSaveBlueprint(next: AppBlueprint) {
-    if (!project) return;
-    setBusy(true);
-    try {
-      const updated = await projectsService.update(project.id, { blueprintJson: next });
-      setProject(updated);
-      setBlueprint(next);
-      toast.success('Estrutura atualizada!');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Erro ao salvar alterações.');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleCompileAndOpenStudio() {
-    if (!project) return;
-    setBusy(true);
-    try {
-      await generatorService.generateCode(project.id, {
+      await generatorService.generateCode(created.id, {
         includeDocker: true,
         includeAiPack: true,
       });
-      toast.success('Software completo gerado! Abrindo simulador e downloads...');
-      router.push(`/studio?id=${project.id}`);
+
+      toast.success('Sistema criado e pronto para testar!');
+      router.push(`/studio?id=${created.id}`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Erro ao compilar o código.');
+      toast.error(err instanceof Error ? err.message : 'Não foi possível criar o sistema.');
     } finally {
-      setBusy(false);
+      setCreating(false);
     }
   }
 
   return (
-    <AppShell>
-      <div className="mx-auto max-w-5xl space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="font-display text-2xl font-bold tracking-tight">
-              Assistente Guiado — Construa seu Software
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Responda em linguagem natural. Nós criamos banco de dados, servidor seguro e telas prontas.
-            </p>
+    <div className="mx-auto max-w-4xl space-y-8">
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-accent">
+          Criação Automática
+        </p>
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">
+          O que você quer organizar hoje?
+        </h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
+          Escolha um ramo abaixo ou escreva em uma frase. Em um clique nós montamos todas as telas e deixamos pronto para você testar.
+        </p>
+      </div>
+
+      {/* Quick Business Starters */}
+      <div className="space-y-3">
+        <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+          1. Escolha um modelo de negócio (ou pule para escrever abaixo)
+        </Label>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {BUSINESS_STARTERS.map((item) => {
+            const Icon = item.icon;
+            const selected = selectedStarterId === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => pickStarter(item)}
+                className={`group flex items-start gap-3 rounded-xl border p-4 text-left transition-all cursor-pointer ${
+                  selected
+                    ? 'border-foreground bg-card ring-1 ring-foreground'
+                    : 'border-border bg-card hover:border-stone-400'
+                }`}
+              >
+                <div
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${
+                    selected
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-muted text-foreground'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-1">
+                    <p className="font-semibold text-sm text-foreground">{item.title}</p>
+                    {selected && <Check className="h-4 w-4 text-accent shrink-0" />}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{item.modules}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Main 1-Click Creation Card */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void buildAndOpen();
+        }}
+        className="rounded-xl border border-border bg-card p-6 space-y-5"
+      >
+        <div className="space-y-2">
+          <Label htmlFor="wiz-idea" className="text-sm font-semibold">
+            2. Descreva o que o seu sistema precisa controlar
+          </Label>
+          <Textarea
+            id="wiz-idea"
+            className="min-h-[110px] text-[15px]"
+            placeholder="Ex: Quero cadastrar clientes com WhatsApp, controlar meus serviços com preço e gerenciar horários marcados na semana."
+            value={plainIdea}
+            onChange={(e) => setPlainIdea(e.target.value)}
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="wiz-name">Nome do sistema (opcional)</Label>
+            <Input
+              id="wiz-name"
+              placeholder="Ex: Agenda da Padaria Pão Quente"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
           </div>
-          <div className="flex items-center gap-2 text-xs font-medium">
-            <Badge variant={step === 1 ? 'default' : 'success'}>1. Sua Ideia</Badge>
-            <span>→</span>
-            <Badge variant={step === 2 ? 'default' : step > 2 ? 'success' : 'outline'}>
-              2. Inteligência
-            </Badge>
-            <span>→</span>
-            <Badge variant={step === 3 ? 'default' : 'outline'}>3. Revisar & Gerar</Badge>
+          <div className="space-y-1.5">
+            <Label htmlFor="wiz-audience">Quem vai usar no dia a dia? (opcional)</Label>
+            <Input
+              id="wiz-audience"
+              placeholder="Ex: Eu e 2 atendentes"
+              value={targetAudience}
+              onChange={(e) => setTargetAudience(e.target.value)}
+            />
           </div>
         </div>
 
-        {step === 1 && (
-          <div className="grid gap-6 lg:grid-cols-3">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Passo 1: O que você deseja construir?</CardTitle>
-                <CardDescription>
-                  Escreva como se estivesse explicando para um amigo, ou escolha um exemplo ao lado.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="wiz-name">Nome do seu sistema ou negócio</Label>
-                  <Input
-                    id="wiz-name"
-                    placeholder="Ex: Sistema da Padaria Pão Quente"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
+        {/* Progressive Disclosure for Advanced Options */}
+        <div className="border-t border-border pt-3">
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground cursor-pointer"
+          >
+            {showAdvanced ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+            Opções avançadas (modelo pronto da comunidade ou conector externo)
+          </button>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="wiz-idea">Explique o que o sistema precisa controlar</Label>
-                  <Textarea
-                    id="wiz-idea"
-                    className="min-h-[120px]"
-                    placeholder="Ex: Quero cadastrar clientes com WhatsApp, controlar meus produtos e registrar encomendas para entrega."
-                    value={plainIdea}
-                    onChange={(e) => setPlainIdea(e.target.value)}
-                  />
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="wiz-audience">Quem vai usar? (opcional)</Label>
-                    <Input
-                      id="wiz-audience"
-                      placeholder="Ex: Eu e minha equipe"
-                      value={targetAudience}
-                      onChange={(e) => setTargetAudience(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="wiz-tpl">Usar um modelo pronto? (opcional)</Label>
-                    <select
-                      id="wiz-tpl"
-                      className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm"
-                      value={selectedTemplateId}
-                      onChange={(e) => {
-                        const id = e.target.value;
-                        setSelectedTemplateId(id);
-                        const tpl = templates.find((t) => t.id === id);
-                        if (tpl && !plainIdea) {
-                          setName(tpl.blueprintJson.appName);
-                          setPlainIdea(tpl.plainPromptExample);
-                          setTargetAudience(tpl.targetAudience);
-                        }
-                      }}
-                    >
-                      <option value="">Não, gerar a partir do meu texto</option>
-                      {templates.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <Button onClick={handleStep1Next} disabled={busy} size="lg">
-                    {busy ? 'Preparando...' : 'Continuar'}
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-muted/40">
-              <CardHeader>
-                <CardTitle className="text-base">Sem inspiração? Clique em um exemplo</CardTitle>
-                <CardDescription>Preenche automaticamente para você testar.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2.5">
-                {EXAMPLE_IDEAS.map((ex) => (
-                  <button
-                    key={ex.name}
-                    type="button"
-                    onClick={() => {
-                      setName(ex.name);
-                      setPlainIdea(ex.idea);
-                      setTargetAudience(ex.audience);
-                      setSelectedTemplateId('');
-                    }}
-                    className="w-full rounded-xl border border-border bg-card p-3 text-left transition hover:border-primary cursor-pointer"
-                  >
-                    <p className="font-semibold text-sm text-foreground">{ex.name}</p>
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{ex.idea}</p>
-                  </button>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {step === 2 && project && (
-          <div className="space-y-5">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bot className="h-5 w-5 text-primary" />
-                  Passo 2: Escolha qual cérebro vai desenhar seu sistema
-                </CardTitle>
-                <CardDescription>
-                  Você pode gerar na hora com o Motor Offline gratuito ou usar sua assinatura do Antigravity, ChatGPT, Claude ou Gemini.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {providers.map((prov) => (
-                    <button
-                      key={prov.id}
-                      type="button"
-                      onClick={() => setSelectedProviderId(prov.id)}
-                      className={`rounded-xl border p-4 text-left transition cursor-pointer ${
-                        selectedProviderId === prov.id
-                          ? 'border-primary bg-primary/8 ring-1 ring-primary/30'
-                          : 'border-border bg-white hover:bg-muted/40'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-semibold text-sm">{prov.subscriptionBrand}</span>
-                        <Badge variant="outline" className="text-[10px]">
-                          {prov.authMode === 'NONE'
-                            ? 'Instantâneo'
-                            : prov.authMode === 'BROWSER_HANDOFF'
-                              ? 'Assinatura Web'
-                              : prov.authMode === 'LOCAL_CLI'
-                                ? 'CLI Local'
-                                : 'API / Local'}
-                        </Badge>
-                      </div>
-                      <p className="text-xs font-medium text-foreground mt-1">{prov.name}</p>
-                      {prov.description && (
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                          {prov.description}
-                        </p>
-                      )}
-                    </button>
+          {showAdvanced && (
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 rounded-lg bg-muted/60 p-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="wiz-tpl">Clonar modelo salvo</Label>
+                <select
+                  id="wiz-tpl"
+                  className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm"
+                  value={selectedTemplateId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setSelectedTemplateId(id);
+                    const tpl = templates.find((t) => t.id === id);
+                    if (tpl) {
+                      setName(tpl.blueprintJson.appName);
+                      setPlainIdea(tpl.plainPromptExample);
+                      setTargetAudience(tpl.targetAudience);
+                    }
+                  }}
+                >
+                  <option value="">Gerar automaticamente do texto</option>
+                  {templates.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
                   ))}
-                </div>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="wiz-prov">Motor / Conector</Label>
+                <select
+                  id="wiz-prov"
+                  className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm"
+                  value={selectedProviderId}
+                  onChange={(e) => setSelectedProviderId(e.target.value)}
+                >
+                  {providers.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
 
-                {selectedProvider?.authMode !== 'BROWSER_HANDOFF' && (
-                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                    <Button variant="outline" onClick={() => setStep(1)}>
-                      <ArrowLeft className="h-4 w-4" />
-                      Voltar
-                    </Button>
-                    <Button size="lg" onClick={handleRunSelectedEngine} disabled={busy}>
-                      <Wand2 className="h-4 w-4" />
-                      {busy ? 'Desenhando telas e banco...' : 'Gerar Telas Automaticamente'}
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {selectedProvider?.authMode === 'BROWSER_HANDOFF' && (
-              <SubscriptionBridgePanel
-                projectId={project.id}
-                initialPrompt={plainIdea}
-                onImported={(importedBlueprint) => {
-                  setBlueprint(importedBlueprint);
-                  setStep(3);
-                }}
-              />
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+          <p className="text-xs text-muted-foreground">
+            Cria telas, cadastros, simulador ao vivo e pacote para download automático.
+          </p>
+          <Button type="submit" variant="accent" size="lg" disabled={creating} className="min-w-[230px]">
+            {creating ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Montando seu sistema...
+              </>
+            ) : (
+              <>
+                Montar e Abrir Meu Sistema
+                <ArrowRight className="h-4 w-4" />
+              </>
             )}
-          </div>
-        )}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+}
 
-        {step === 3 && project && blueprint && (
-          <div className="space-y-5">
-            <Card className="border-primary/30 bg-primary/5">
-              <CardContent className="flex flex-wrap items-center justify-between gap-4 pt-5">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-6 w-6 text-primary shrink-0" />
-                  <div>
-                    <h2 className="font-display font-semibold text-base">
-                      Estrutura pronta! Confira ou personalize antes de gerar o código
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      Adicione ou renomeie campos em português e depois clique em &ldquo;Construir Software Completo&rdquo;.
-                    </p>
-                  </div>
-                </div>
-                <Button size="lg" onClick={handleCompileAndOpenStudio} disabled={busy}>
-                  <Code2 className="h-4 w-4" />
-                  {busy ? 'Construindo arquivos...' : 'Construir Software Completo'}
-                  <Sparkles className="h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
-
-            <BlueprintVisualEditor
-              blueprint={blueprint}
-              onSave={handleSaveBlueprint}
-              saving={busy}
-            />
-          </div>
-        )}
-      </div>
+export default function WizardPage() {
+  return (
+    <AppShell>
+      <Suspense fallback={<div className="p-8 text-sm text-muted-foreground">Preparando criador...</div>}>
+        <NewSystemFormContent />
+      </Suspense>
     </AppShell>
   );
 }

@@ -125,9 +125,9 @@ export default function ProjectsPage() {
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-2xl font-bold tracking-tight">Meus Projetos</h1>
-            <p className="text-sm text-muted-foreground">
-              Gerencie seus sistemas criados, simule telas, conecte IAs e baixe o código completo.
+            <h1 className="font-display text-3xl font-semibold tracking-tight">Meus Sistemas</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Abra qualquer sistema para testar no navegador, editar telas ou baixar o código completo.
             </p>
           </div>
           {canWrite && (
@@ -136,10 +136,10 @@ export default function ProjectsPage() {
                 <FolderPlus className="h-4 w-4" />
                 Cadastro Rápido
               </Button>
-              <Button asChild>
+              <Button variant="accent" asChild>
                 <Link href="/wizard">
                   <Sparkles className="h-4 w-4" />
-                  Novo com Assistente
+                  Novo Sistema
                 </Link>
               </Button>
             </div>

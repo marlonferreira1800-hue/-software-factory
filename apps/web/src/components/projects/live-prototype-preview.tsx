@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import { AppBlueprint, BlueprintEntity } from '@software-factory/shared';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -17,39 +16,35 @@ import {
 import { Input, Label } from '@/components/ui/input';
 import { DeleteConfirmDialog } from '@/components/common/delete-confirm-dialog';
 
+const SAMPLE_NAMES = ['Lucas Almeida', 'Mariana Costa', 'Rafael Souza'];
+const SAMPLE_ITEMS = ['Atendimento Completo', 'Produto Selecionado', 'Pedido #104'];
+
 function buildSampleRows(entity: BlueprintEntity): Array<Record<string, string | boolean>> {
-  const row1: Record<string, string | boolean> = { id: 'sim-1' };
-  const row2: Record<string, string | boolean> = { id: 'sim-2' };
-
-  for (const f of entity.fields) {
-    if (f.type === 'boolean') {
-      row1[f.name] = true;
-      row2[f.name] = false;
-    } else if (f.type === 'currency') {
-      row1[f.name] = '120.00';
-      row2[f.name] = '85.50';
-    } else if (f.type === 'int') {
-      row1[f.name] = '15';
-      row2[f.name] = '4';
-    } else if (f.type === 'email') {
-      row1[f.name] = 'joao@exemplo.com';
-      row2[f.name] = 'maria@exemplo.com';
-    } else if (f.type === 'phone') {
-      row1[f.name] = '(11) 98765-4321';
-      row2[f.name] = '(21) 99123-4567';
-    } else if (f.type === 'enum' && f.enumValues?.length) {
-      row1[f.name] = f.enumValues[0];
-      row2[f.name] = f.enumValues[1] || f.enumValues[0];
-    } else if (f.type === 'date' || f.type === 'datetime') {
-      row1[f.name] = '2026-11-20';
-      row2[f.name] = '2026-11-21';
-    } else {
-      row1[f.name] = `${f.label} Exemplo 1`;
-      row2[f.name] = `${f.label} Exemplo 2`;
+  return [0, 1, 2].map((idx) => {
+    const row: Record<string, string | boolean> = { id: `sim-${idx + 1}` };
+    for (const f of entity.fields) {
+      if (f.type === 'boolean') {
+        row[f.name] = idx !== 1;
+      } else if (f.type === 'currency') {
+        row[f.name] = ['120,00', '85,50', '210,00'][idx];
+      } else if (f.type === 'int') {
+        row[f.name] = ['18', '7', '32'][idx];
+      } else if (f.type === 'email') {
+        row[f.name] = ['lucas@exemplo.com', 'mariana@exemplo.com', 'rafael@exemplo.com'][idx];
+      } else if (f.type === 'phone') {
+        row[f.name] = ['(11) 98765-4321', '(21) 99123-4567', '(31) 99812-1044'][idx];
+      } else if (f.type === 'enum' && f.enumValues?.length) {
+        row[f.name] = f.enumValues[idx % f.enumValues.length];
+      } else if (f.type === 'date' || f.type === 'datetime') {
+        row[f.name] = ['20/11/2026 14:30', '20/11/2026 16:00', '21/11/2026 09:30'][idx];
+      } else if (f.name.toLowerCase().includes('cliente') || f.name.toLowerCase().includes('nome') || f.name.toLowerCase().includes('responsavel')) {
+        row[f.name] = SAMPLE_NAMES[idx];
+      } else {
+        row[f.name] = `${SAMPLE_ITEMS[idx]}`;
+      }
     }
-  }
-
-  return [row1, row2];
+    return row;
+  });
 }
 
 export function LivePrototypePreview({ blueprint }: { blueprint: AppBlueprint }) {
@@ -113,11 +108,11 @@ export function LivePrototypePreview({ blueprint }: { blueprint: AppBlueprint })
         r.id === editingId ? { ...formState, id: editingId } : r,
       );
       setStore({ ...store, [activeEntity.slug]: updated });
-      toast.success(`${activeEntity.label} atualizado no simulador!`);
+      toast.success(`${activeEntity.label} atualizado!`);
     } else {
       const newRow = { ...formState, id: `sim-${Date.now()}` };
       setStore({ ...store, [activeEntity.slug]: [newRow, ...currentRows] });
-      toast.success(`${activeEntity.label} cadastrado no simulador!`);
+      toast.success(`${activeEntity.label} cadastrado!`);
     }
     setModalOpen(false);
   }
@@ -130,68 +125,78 @@ export function LivePrototypePreview({ blueprint }: { blueprint: AppBlueprint })
       [activeEntity.slug]: currentRows.filter((r) => r.id !== deleteTargetId),
     });
     setDeleteTargetId(null);
-    toast.success('Registro removido da simulação.');
+    toast.success('Registro removido.');
   }
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="border-b border-border bg-muted/50">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <CardTitle>{blueprint.appName} — Simulador Interativo</CardTitle>
-              <Badge variant="success">Preview ao Vivo</Badge>
-            </div>
-            <CardDescription className="mt-1">
-              Experimente agora como seu usuário final vai navegar, cadastrar, buscar e excluir dados.
-            </CardDescription>
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+      {/* App Window Chrome */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-[#F5F3EE] px-4 py-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-stone-300" />
+            <span className="h-2.5 w-2.5 rounded-full bg-stone-300" />
+            <span className="h-2.5 w-2.5 rounded-full bg-stone-300" />
           </div>
+          <span className="text-sm font-semibold text-foreground">{blueprint.appName}</span>
+          <Badge variant="success">Interativo</Badge>
         </div>
-        <div className="flex flex-wrap gap-2 pt-3">
+
+        <div className="flex flex-wrap gap-1.5">
           {blueprint.entities.map((entity) => (
-            <Button
+            <button
               key={entity.slug}
               type="button"
-              size="sm"
-              variant={entity.slug === activeEntity.slug ? 'default' : 'outline'}
               onClick={() => {
                 setSelectedSlug(entity.slug);
                 setSearch('');
               }}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+                entity.slug === activeEntity.slug
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-card text-muted-foreground border border-border hover:text-foreground'
+              }`}
             >
               {entity.pluralLabel}
-            </Button>
+            </button>
           ))}
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="space-y-4 pt-5">
+      {/* Simulated Screen Body */}
+      <div className="p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="relative flex-1 min-w-[220px] max-w-sm">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              className="pl-9"
-              placeholder={`Buscar em ${activeEntity.pluralLabel.toLowerCase()}...`}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          <div>
+            <h3 className="text-base font-semibold text-foreground">{activeEntity.pluralLabel}</h3>
+            <p className="text-xs text-muted-foreground">{activeEntity.description}</p>
           </div>
-          <Button type="button" onClick={openCreate}>
-            <Plus className="h-4 w-4" />
-            Novo {activeEntity.label}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative w-56">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="h-9 pl-8 text-xs"
+                placeholder="Buscar..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <Button type="button" variant="accent" size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              Novo {activeEntity.label}
+            </Button>
+          </div>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-border">
+        <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm">
-            <thead className="bg-muted text-xs uppercase text-muted-foreground">
+            <thead className="bg-muted text-xs text-muted-foreground">
               <tr>
                 {visibleColumns.map((col) => (
-                  <th key={col.name} className="px-4 py-3 text-left font-semibold">
+                  <th key={col.name} className="px-4 py-2.5 text-left font-medium">
                     {col.label}
                   </th>
                 ))}
-                <th className="px-4 py-3 text-right font-semibold">Ações</th>
+                <th className="px-4 py-2.5 text-right font-medium">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -199,9 +204,9 @@ export function LivePrototypePreview({ blueprint }: { blueprint: AppBlueprint })
                 <tr>
                   <td
                     colSpan={visibleColumns.length + 1}
-                    className="px-4 py-8 text-center text-muted-foreground"
+                    className="px-4 py-8 text-center text-sm text-muted-foreground"
                   >
-                    Nenhum registro encontrado nessa simulação.
+                    Nenhum registro encontrado. Clique em &ldquo;+ Novo {activeEntity.label}&rdquo; para testar!
                   </td>
                 </tr>
               ) : (
@@ -213,9 +218,9 @@ export function LivePrototypePreview({ blueprint }: { blueprint: AppBlueprint })
                       if (col.type === 'boolean') formatted = raw ? 'Sim' : 'Não';
                       if (col.type === 'currency' && raw) formatted = `R$ ${raw}`;
                       return (
-                        <td key={col.name} className="px-4 py-3">
+                        <td key={col.name} className="px-4 py-3 text-sm">
                           {col.type === 'enum' ? (
-                            <Badge variant="secondary">{formatted}</Badge>
+                            <Badge variant="default">{formatted}</Badge>
                           ) : (
                             formatted
                           )}
@@ -223,12 +228,7 @@ export function LivePrototypePreview({ blueprint }: { blueprint: AppBlueprint })
                       );
                     })}
                     <td className="px-4 py-3 text-right space-x-1 whitespace-nowrap">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEdit(row)}
-                      >
+                      <Button type="button" variant="ghost" size="sm" onClick={() => openEdit(row)}>
                         <Pencil className="h-3.5 w-3.5" />
                         Editar
                       </Button>
@@ -249,7 +249,7 @@ export function LivePrototypePreview({ blueprint }: { blueprint: AppBlueprint })
             </tbody>
           </table>
         </div>
-      </CardContent>
+      </div>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
@@ -313,7 +313,9 @@ export function LivePrototypePreview({ blueprint }: { blueprint: AppBlueprint })
               <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit">Salvar no Simulador</Button>
+              <Button type="submit" variant="accent">
+                Salvar
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -325,9 +327,9 @@ export function LivePrototypePreview({ blueprint }: { blueprint: AppBlueprint })
           if (!open) setDeleteTargetId(null);
         }}
         title={`Excluir ${activeEntity.label}?`}
-        description="Esta confirmação demonstra a proteção contra exclusões acidentais gerada automaticamente no seu sistema."
+        description="Confirmação automática contra exclusões acidentais incluída no sistema gerado."
         onConfirm={confirmDelete}
       />
-    </Card>
+    </div>
   );
 }

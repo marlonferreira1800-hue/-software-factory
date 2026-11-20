@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Blocks, KeyRound, UserPlus } from 'lucide-react';
+import { KeyRound, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { LoginSchema, RegisterSchema } from '@software-factory/shared';
 import { useAuth } from '@/lib/auth-context';
@@ -75,24 +75,34 @@ function LoginFormContent() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-md space-y-5">
-        <div className="flex flex-col items-center text-center space-y-2">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-            <Blocks className="h-6 w-6" />
-          </div>
-          <h1 className="font-display text-2xl font-bold tracking-tight">Fábrica Livre</h1>
+        <div className="flex flex-col items-center text-center space-y-2.5">
+          <svg
+            width="42"
+            height="42"
+            viewBox="0 0 28 28"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <rect width="28" height="28" rx="7" fill="#171614" />
+            <rect x="6" y="6" width="7" height="7" rx="1.5" fill="#FAF9F6" />
+            <rect x="15" y="6" width="7" height="7" rx="1.5" fill="#B93815" />
+            <rect x="6" y="15" width="16" height="7" rx="1.5" fill="#FAF9F6" fillOpacity="0.88" />
+          </svg>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Fábrica Livre</h1>
           <p className="text-sm text-muted-foreground">
-            Crie seu próprio sistema sem conhecimento técnico
+            Crie o sistema do seu negócio em um minuto
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <div className="grid grid-cols-2 gap-2 rounded-xl bg-muted p-1">
+            <div className="grid grid-cols-2 gap-1.5 rounded-lg bg-muted p-1">
               <button
                 type="button"
                 onClick={() => setMode('login')}
-                className={`rounded-lg py-2 text-sm font-medium transition cursor-pointer ${
-                  mode === 'login' ? 'bg-card shadow-xs text-foreground' : 'text-muted-foreground'
+                className={`rounded-md py-2 text-sm font-medium transition cursor-pointer ${
+                  mode === 'login' ? 'bg-card shadow-2xs text-foreground' : 'text-muted-foreground'
                 }`}
               >
                 Entrar
@@ -100,20 +110,20 @@ function LoginFormContent() {
               <button
                 type="button"
                 onClick={() => setMode('register')}
-                className={`rounded-lg py-2 text-sm font-medium transition cursor-pointer ${
-                  mode === 'register' ? 'bg-card shadow-xs text-foreground' : 'text-muted-foreground'
+                className={`rounded-md py-2 text-sm font-medium transition cursor-pointer ${
+                  mode === 'register' ? 'bg-card shadow-2xs text-foreground' : 'text-muted-foreground'
                 }`}
               >
                 Criar Conta
               </button>
             </div>
             <CardTitle className="pt-2">
-              {mode === 'login' ? 'Acesse sua oficina' : 'Comece gratuitamente'}
+              {mode === 'login' ? 'Acesse sua conta' : 'Criar conta gratuita'}
             </CardTitle>
             <CardDescription>
               {mode === 'login'
-                ? 'Entre com seu e-mail e senha para gerenciar projetos e baixar códigos.'
-                : 'Ao criar conta, seus conectores para Antigravity, ChatGPT, Claude e Gemini são configurados automaticamente.'}
+                ? 'Entre para gerenciar seus sistemas, testar telas e baixar os arquivos.'
+                : 'Seus modelos prontos e integrações já ficam disponíveis após o cadastro.'}
             </CardDescription>
           </CardHeader>
 

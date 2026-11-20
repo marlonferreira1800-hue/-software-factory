@@ -229,15 +229,15 @@ export default function TemplatesPage() {
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-2xl font-bold tracking-tight">Modelos Prontos</h1>
-            <p className="text-sm text-muted-foreground">
-              Escolha um sistema pronto para começar em 1 clique e depois personalize tudo como quiser.
+            <h1 className="font-display text-3xl font-semibold tracking-tight">Modelos Prontos</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Escolha um sistema pronto para começar em 1 clique e depois personalize cada campo como quiser.
             </p>
           </div>
           {canWrite && (
-            <Button onClick={openCreate}>
+            <Button variant="accent" onClick={openCreate}>
               <Plus className="h-4 w-4" />
-              Publicar Novo Modelo
+              Publicar Modelo
             </Button>
           )}
         </div>
