@@ -9,12 +9,10 @@ services:
     name: fabrica-livre-api
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build:shared && npx prisma generate --schema=apps/api/prisma/schema.prisma && npm run build:api
-    startCommand: npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma && npx tsx apps/api/prisma/seed.ts && node apps/api/dist/main.js
+    buildCommand: npm install --include=dev && npm run build:shared && npx prisma generate --schema=apps/api/prisma/schema.prisma && npm run build:api
+    startCommand: NODE_ENV=production npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma && NODE_ENV=production npx tsx apps/api/prisma/seed.ts && NODE_ENV=production node apps/api/dist/main.js
     healthCheckPath: /api/health
     envVars:
-      - key: NODE_ENV
-        value: production
       - key: DATABASE_URL
         fromDatabase:
           name: fabrica-livre-db
@@ -30,12 +28,10 @@ services:
     name: fabrica-livre-web
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build:shared && npm run build:web
-    startCommand: npm run start --workspace=apps/web
+    buildCommand: npm install --include=dev && npm run build:shared && NODE_OPTIONS="--max-old-space-size=460" npm run build:web
+    startCommand: NODE_ENV=production npm run start --workspace=apps/web
     healthCheckPath: /
     envVars:
-      - key: NODE_ENV
-        value: production
       - key: API_URL
         fromService:
           type: web
