@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: fabrica-livre-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-fabrica}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fabrica_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-fabrica_livre}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fabrica} -d ${POSTGRES_DB:-fabrica_livre}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: fabrica-livre-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-fabrica}:${POSTGRES_PASSWORD:-fabrica_dev_password}@postgres:5432/${POSTGRES_DB:-fabrica_livre}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-fabrica-livre-super-secret-jwt-key-change-in-production-2026}
+      ENCRYPTION_SECRET: ${ENCRYPTION_SECRET:-fabrica-livre-aes-256-key-change-in-production-2026}
+      PORT: 3001
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+    ports:
+      - "3001:3001"
+    command: >
+      sh -c "npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma &&
+             npx tsx apps/api/prisma/seed.ts &&
+             node apps/api/dist/main.js"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+    container_name: fabrica-livre-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      PORT: 3000
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:

@@ -1,0 +1,25 @@
+{
+  "name": "fabrica-livre-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plataforma open-source de fábrica de software automatizada para pessoas sem conhecimento técnico, compatível com Antigravity, Gemini, Claude, ChatGPT e execução local.",
+  "license": "MIT",
+  "workspaces": [
+    "packages/shared",
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "build:shared": "npm run build --workspace=packages/shared",
+    "build:api": "npm run build --workspace=apps/api",
+    "build:web": "npm run build --workspace=apps/web",
+    "build": "npm run build:shared && npm run build:api && npm run build:web",
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "prisma:generate": "npm run prisma:generate --workspace=apps/api",
+    "prisma:migrate": "npm run prisma:migrate --workspace=apps/api",
+    "prisma:seed": "npm run prisma:seed --workspace=apps/api",
+    "test": "npm run test --workspace=apps/api",
+    "lint": "npm run lint --workspace=apps/api && npm run lint --workspace=apps/web"
+  }
+}

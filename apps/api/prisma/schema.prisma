@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  BUILDER
+  VIEWER
+}
+
+enum AiProviderType {
+  BUILTIN_OFFLINE
+  SUBSCRIPTION_BRIDGE
+  ANTIGRAVITY_AGENT
+  CLAUDE_CLI
+  GEMINI_CLI
+  CODEX_CLI
+  OPENAI_API
+  ANTHROPIC_API
+  GEMINI_API
+  OLLAMA_LOCAL
+  OPENAI_COMPATIBLE
+}
+
+enum AiProviderAuthMode {
+  NONE
+  BROWSER_HANDOFF
+  LOCAL_CLI
+  API_KEY
+  LOCAL_SERVER
+}
+
+enum TemplateCategory {
+  SERVICOS
+  COMERCIO
+  SAUDE
+  FINANCAS
+  EDUCACAO
+  OPERACOES
+  OUTROS
+}
+
+enum ProjectStatus {
+  DRAFT
+  DESIGNED
+  GENERATED
+  EXPORTED
+}
+
+enum GenerationMode {
+  AUTOMATIC_ENGINE
+  SUBSCRIPTION_HANDOFF
+  LOCAL_CLI
+  API_DIRECT
+  TEMPLATE_CLONE
+}
+
+enum GenerationJobStatus {
+  PENDING
+  AWAITING_HANDOFF
+  COMPLETED
+  FAILED
+}
+
+enum ArtifactLayer {
+  DATABASE
+  BACKEND
+  FRONTEND
+  INFRA
+  AI_PACK
+  DOCS
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         UserRole  @default(BUILDER)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  aiProviders    AiProviderConnection[]
+  templates      AppTemplate[]
+  projects       SoftwareProject[]
+  generationJobs GenerationJob[]
+
+  @@index([role, deletedAt])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model AiProviderConnection {
+  id                String             @id @default(cuid())
+  name              String
+  slug              String
+  providerType      AiProviderType
+  authMode          AiProviderAuthMode
+  subscriptionBrand String
+  description       String?
+  modelName         String?
+  baseUrl           String?
+  cliCommand        String?
+  encryptedApiKey   String?
+  maskedApiKey      String?
+  isDefault         Boolean            @default(false)
+  isActive          Boolean            @default(true)
+  lastTestedAt      DateTime?
+  lastTestStatus    String?
+  ownerId           String
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  deletedAt         DateTime?
+
+  owner          User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  projects       SoftwareProject[]
+  generationJobs GenerationJob[]
+
+  @@unique([ownerId, slug])
+  @@index([ownerId, deletedAt])
+  @@index([providerType, isActive])
+  @@map("ai_provider_connections")
+}
+
+model AppTemplate {
+  id                 String           @id @default(cuid())
+  name               String
+  slug               String           @unique
+  category           TemplateCategory
+  icon               String           @default("LayoutGrid")
+  shortDescription   String
+  targetAudience     String
+  plainPromptExample String
+  blueprintJson      Json
+  isOfficial         Boolean          @default(false)
+  usageCount         Int              @default(0)
+  authorId           String
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  deletedAt          DateTime?
+
+  author   User              @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  projects SoftwareProject[]
+
+  @@index([category, deletedAt])
+  @@index([isOfficial, deletedAt])
+  @@map("app_templates")
+}
+
+model SoftwareProject {
+  id                  String        @id @default(cuid())
+  name                String
+  slug                String
+  plainIdea           String
+  targetAudience      String?
+  status              ProjectStatus @default(DRAFT)
+  blueprintJson       Json?
+  generatedFilesCount Int           @default(0)
+  lastGeneratedAt     DateTime?
+  ownerId             String
+  templateId          String?
+  aiProviderId        String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  deletedAt           DateTime?
+
+  owner      User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  template   AppTemplate?          @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  aiProvider AiProviderConnection? @relation(fields: [aiProviderId], references: [id], onDelete: SetNull)
+  jobs       GenerationJob[]
+  artifacts  GeneratedArtifact[]
+
+  @@unique([ownerId, slug])
+  @@index([ownerId, status, deletedAt])
+  @@index([deletedAt])
+  @@map("software_projects")
+}
+
+model GenerationJob {
+  id                  String              @id @default(cuid())
+  projectId           String
+  providerId          String?
+  triggeredById       String
+  mode                GenerationMode
+  status              GenerationJobStatus @default(PENDING)
+  promptUsed          String
+  handoffInstructions String?
+  rawResponse         String?
+  errorMessage        String?
+  durationMs          Int?
+  filesGeneratedJson  Json?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  project     SoftwareProject       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  provider    AiProviderConnection? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  triggeredBy User                  @relation(fields: [triggeredById], references: [id], onDelete: Restrict)
+  artifacts   GeneratedArtifact[]
+
+  @@index([projectId, createdAt])
+  @@index([triggeredById])
+  @@map("generation_jobs")
+}
+
+model GeneratedArtifact {
+  id        String        @id @default(cuid())
+  projectId String
+  jobId     String
+  filePath  String
+  layer     ArtifactLayer
+  language  String
+  content   String
+  sizeBytes Int
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  project SoftwareProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  job     GenerationJob   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, filePath])
+  @@index([projectId, layer])
+  @@map("generated_artifacts")
+}
